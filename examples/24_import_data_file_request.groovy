@@ -1,20 +1,23 @@
 /*RTPS: */
-// Cube     : PlanCube (placeholder for the cube that receives the data)
+// Cube     : PlanCube (placeholder; replace with the target cube)
 // Trigger  : Jobs page
-// Purpose  : load a delimited data file from the inbox into a cube with createDataImportRequest(),
-//            adding to existing values and writing rejected rows to an error log in the outbox.
-// Assumes  : the file is in Planning "cell format" (one data cell per line), comma separated,
-//            dates written dd/MM/yyyy. createDataImportRequest()/DataImportRequest is marked ⚠ in
-//            docs/01-api-reference.md — verify the setter names and the enum constants
-//            (ADD_TO_EXISTING_VALUE, CELL_FORMAT) in the API reference.
+// Purpose  : load a comma-delimited Planning cell-format file from the inbox, add values to
+//            existing data, and write rejected rows to an outbox error file.
+// Assumes  : Data_File.txt has no header; each row follows the target cube's dimension order
+//            (Scenario, Version, Year, Period, Entity, Currency, Account), then the cell value.
+//            See 24_import_data_file_request_sample.txt; replace its members/dimensions. Date
+//            values use dd/MM/yyyy.
 
-Cube cube = operation.application.getCube("PlanCube")
+final String CUBE = "PlanCube"
+final String DATA_FILE = "Data_File.txt"
+final String ERROR_FILE = "Data_Load.log"
 
+Cube cube = operation.application.getCube(CUBE)
 cube.createDataImportRequest()
     .setDateFormat("dd/MM/yyyy")
     .setDataLoadOption(ADD_TO_EXISTING_VALUE)
-    .setErrorFileName("Data_Load.log")
-    .importDataFromFile("Data_File.txt", CELL_FORMAT, ',')
+    .setErrorFileName(ERROR_FILE)
+    .importDataFromFile(DATA_FILE, CELL_FORMAT, ',')
 
-println "Import finished — check Data_Load.log in the outbox for rejected rows"
+println "Import finished; check $ERROR_FILE in the outbox for rejected rows"
 return

@@ -104,6 +104,13 @@ Packages: `oracle.epm.api`, `oracle.epm.api.grid`, `oracle.epm.api.model`, `orac
 | `getSubstitutionVariable(name)` / `setSubstitutionVariable(name, value)` ⚠ | cube-scoped sub vars |
 | `getDimensions()` ⚠ | |
 
+### `DataImportRequest` ⚠
+The request pattern used in `examples/24_import_data_file_request.groovy` calls
+`setDateFormat(String)`, `setDataLoadOption(...)`, `setErrorFileName(String)`, and
+`importDataFromFile(String, ..., char)`, with `ADD_TO_EXISTING_VALUE` and `CELL_FORMAT`.
+These names and enum constants are usage-based, not verified against the live Javadoc;
+confirm their current signatures and constants before deploying.
+
 ## `DataGridDefinitionBuilder` (read) **[usage]**
 ```groovy
 DataGridDefinitionBuilder b = cube.dataGridDefinitionBuilder()

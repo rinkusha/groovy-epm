@@ -137,3 +137,23 @@ Rule of thumb: if the file's column layout is stable and reusable, map it once i
 Management and keep Groovy to trigger/poll (`P10`, `examples/23`). Reach for
 `DataGridBuilder` CSV parsing (`P16`) only for small, one-off files where setting up an
 Import Format isn't worth it. `DataMap` is a different problem — cube-to-cube, not file-to-cube.
+
+## P18. Import a Planning cell-format file directly into a cube
+For a file that already has one data cell per line, use `Cube.createDataImportRequest()`
+instead of parsing rows into a `DataGridBuilder`:
+```groovy
+cube.createDataImportRequest()
+    .setDateFormat("dd/MM/yyyy")
+    .setDataLoadOption(ADD_TO_EXISTING_VALUE)
+    .setErrorFileName("Data_Load.log")
+    .importDataFromFile("Data_File.txt", CELL_FORMAT, ',')
+```
+Upload `examples/24_import_data_file_request_sample.txt` to the inbox as `Data_File.txt`
+before running `examples/24_import_data_file_request.groovy` from the Jobs page. The sample
+has no header: each line contains members in the target cube's required dimension order,
+then the data value. The sample order is Scenario, Version, Year, Period, Entity, Currency,
+Account, Value; replace the placeholder members and adapt the order to the target cube.
+The `Close Date` account in the sample must be a date account. Rejected rows are written to
+the configured outbox error file. These `DataImportRequest` methods and enum constants are
+marked ⚠ in `docs/01-api-reference.md`; confirm their live signatures/constants in Oracle's
+Javadoc before deploying.
