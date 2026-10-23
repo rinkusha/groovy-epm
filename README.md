@@ -69,6 +69,7 @@ snippets/epm-groovy.code-snippets
 | 24 | `import_data_file_request` | `createDataImportRequest`, `importDataFromFile` (cell format, add-to-existing, error log; includes sample input file) | Jobs |
 | 25 | `rest_plan_type_map_push_and_wait` | REST `PLAN_TYPE_MAP` Data Map push with `overrideMembersMap` + polling | Jobs |
 | 26 | `data_map_dynamic_department_filter` | Data Map push with dynamic Department filter from an RTP; includes test cases | Jobs |
+| 27 | `coa_migration_map_dictionary` | old→new CoA migration: CSV mapping loaded into a Map with concatenated multi-dimension keys, wildcard fallback, summed targets, unmapped-rows CSV; includes sample CSVs | Jobs |
 
 ## Accuracy notes
 

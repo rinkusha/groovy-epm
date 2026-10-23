@@ -157,3 +157,11 @@ The `Close Date` account in the sample must be a date account. Rejected rows are
 the configured outbox error file. These `DataImportRequest` methods and enum constants are
 marked ⚠ in `docs/01-api-reference.md`; confirm their live signatures/constants in Oracle's
 Javadoc before deploying.
+
+## Multi-dimension mapping with a dictionary (CoA migration)
+Load a mapping CSV into a `Map` keyed by concatenated source members (`"Account|Entity|CostCenter"`),
+then look up each data row from most specific key to least specific (`*` wildcards). Sum rows that
+land on the same target, send unmapped rows to an exceptions CSV, and save with `DataGridBuilder`.
+See `examples/27_coa_migration_map_dictionary.groovy` and the sample files
+`examples/27_coa_mapping_sample.csv` / `examples/27_old_coa_balances_sample.csv`
+(upload both to the inbox as `coa_mapping.csv` and `old_coa_balances.csv`).
