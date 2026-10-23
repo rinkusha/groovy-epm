@@ -88,7 +88,7 @@ csvIterator('in.csv').withCloseable { it.each { String[] row -> … } }
 createFilePrintWriter('log.txt').withCloseable { it.println 'x' }
 workbook().withCloseable { Workbook b -> b.createSheet().with { addRow('a','b') }; b.save('x.xlsx') }
 ```
-→ `examples/12`, `17`, `18`. Download with EPM Automate `downloadfile`.
+→ `examples/12`, `17`, `18`, `22`. Download with EPM Automate `downloadfile`.
 
 ## P12. EPM Automate from inside the pod
 → `examples/15`. Service Administrator only. `execute('cmd','arg1',…)` → `status`, `output`, `itemsList`.
@@ -107,3 +107,33 @@ printf("%-20s %,12.2f%n", name, value)
 
 ## P15. Guarding the return value
 End every non-calc script with `return`. A stray trailing string literal, a `println` is fine (void), but `"done"` as the last line **will be sent to Essbase** and fail validation.
+
+## P16. CSV with a variable/limited column list, imported slowly and watchably
+When the CSV's column set changes run to run (e.g. one period, a quarter, or a
+custom subset instead of a fixed Jan-Dec list), read the header row first and
+build the `DataGridBuilder` column list from it instead of hard-coding `PERIODS`:
+```groovy
+List<String[]> lines = []
+csvIterator(FILE).withCloseable { it.each { String[] v -> lines << v } }
+List<String> periods = lines[0][2..-1]*.trim()   // header after Entity,Account
+b.addColumn(*periods)
+dataRows.eachWithIndex { String[] v, int idx ->
+    // ... addRow ...
+    println "Row ${idx + 1}/$total: ..."
+    sleep(PAUSE_MS)                              // deliberate throttle, small files only
+}
+```
+→ `examples/22`. Use a small `sleep(ms)` between rows (not `Thread.sleep`) only for
+small, human-watched files; never throttle a bulk/level-0 load this way.
+
+## P17. Multi-dimension file import: three ways to map columns, pick by robustness/reuse
+| Mechanism | Where the dimension mapping lives | Groovy's job |
+|---|---|---|
+| **Data Management Import Format + Data Load Rule** | Configured once in Data Management (Data Exchange > Data Load Mapping): file column -> dimension, plus value mappings. Reusable across runs/files. | Upload the file (EPM Automate `uploadfile`), then only **trigger + poll** the data load rule — internal REST `/aif/rest/V1/jobs` (`examples/10`) or `getEpmAutomate().execute('rundatarule', ...)` / `importdata` (`examples/15`). No `DataGrid`/`DataGridBuilder` code at all. → `examples/23` |
+| **Data Map (`DataMap`)** | Configured once in Planning (Data Exchange > Data Maps): source cube/dims -> target cube/dims. | `operation.application.getDataMap("Name").execute(clearFirst)` or `.createSmartPush().execute(overrides)` — moves data **cube to cube**, not from an external file. → `examples/05`, P7. |
+| **`DataGridBuilder` over a parsed CSV** | Hand-written in the Groovy rule itself (column index -> `addRow`/`addColumn` position). | Parse every row yourself with `csvIterator`, build the grid, `cube.saveGrid(grid)`. No reuse outside this script; fine for small ad-hoc driver files. → `examples/17`, `22`. |
+
+Rule of thumb: if the file's column layout is stable and reusable, map it once in Data
+Management and keep Groovy to trigger/poll (`P10`, `examples/23`). Reach for
+`DataGridBuilder` CSV parsing (`P16`) only for small, one-off files where setting up an
+Import Format isn't worth it. `DataMap` is a different problem — cube-to-cube, not file-to-cube.
