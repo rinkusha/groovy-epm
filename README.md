@@ -64,6 +64,7 @@ snippets/epm-groovy.code-snippets
 | 19 | `template_with_design_time_prompt` | Calculation Manager template + DTP | After Save |
 | 20 | `aso_allocation_mdx_params` | `AllocationParameters`, `mdxParams` | Jobs |
 | 21 | `substitution_variables_and_rtp_driver` | sub vars, one-line expression style | Jobs |
+| 23 | `export_limited_columns_list_format_csv` | limited-column list-format CSV via `csvWriter` | Jobs |
 | 22 | `git_data_load_rule` (+ `22_git_data_load/`) | git over REST Connection → validate → `DataGridBuilder` | Jobs |
 
 ## Accuracy notes
