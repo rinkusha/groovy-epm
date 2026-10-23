@@ -68,6 +68,7 @@ snippets/epm-groovy.code-snippets
 | 23 | `data_management_import_with_dimension_mapping` | file import via Data Management Import Format (multi-dim column mapping configured in UI), REST trigger + poll, no grid built in Groovy | Jobs |
 | 24 | `import_data_file_request` | `createDataImportRequest`, `importDataFromFile` (cell format, add-to-existing, error log; includes sample input file) | Jobs |
 | 25 | `rest_plan_type_map_push_and_wait` | REST `PLAN_TYPE_MAP` Data Map push with `overrideMembersMap` + polling | Jobs |
+| 26 | `data_map_dynamic_department_filter` | Data Map push with dynamic Department filter from an RTP; includes test cases | Jobs |
 
 ## Accuracy notes
 
