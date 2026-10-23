@@ -88,7 +88,7 @@ csvIterator('in.csv').withCloseable { it.each { String[] row -> … } }
 createFilePrintWriter('log.txt').withCloseable { it.println 'x' }
 workbook().withCloseable { Workbook b -> b.createSheet().with { addRow('a','b') }; b.save('x.xlsx') }
 ```
-→ `examples/12`, `17`, `18`. Download with EPM Automate `downloadfile`.
+→ `examples/12`, `17`, `18`, `22`. Download with EPM Automate `downloadfile`.
 
 ## P12. EPM Automate from inside the pod
 → `examples/15`. Service Administrator only. `execute('cmd','arg1',…)` → `status`, `output`, `itemsList`.
@@ -107,3 +107,21 @@ printf("%-20s %,12.2f%n", name, value)
 
 ## P15. Guarding the return value
 End every non-calc script with `return`. A stray trailing string literal, a `println` is fine (void), but `"done"` as the last line **will be sent to Essbase** and fail validation.
+
+## P16. CSV with a variable/limited column list, imported slowly and watchably
+When the CSV's column set changes run to run (e.g. one period, a quarter, or a
+custom subset instead of a fixed Jan-Dec list), read the header row first and
+build the `DataGridBuilder` column list from it instead of hard-coding `PERIODS`:
+```groovy
+List<String[]> lines = []
+csvIterator(FILE).withCloseable { it.each { String[] v -> lines << v } }
+List<String> periods = lines[0][2..-1]*.trim()   // header after Entity,Account
+b.addColumn(*periods)
+dataRows.eachWithIndex { String[] v, int idx ->
+    // ... addRow ...
+    println "Row ${idx + 1}/$total: ..."
+    sleep(PAUSE_MS)                              // deliberate throttle, small files only
+}
+```
+→ `examples/22`. Use a small `sleep(ms)` between rows (not `Thread.sleep`) only for
+small, human-watched files; never throttle a bulk/level-0 load this way.

@@ -64,6 +64,7 @@ snippets/epm-groovy.code-snippets
 | 19 | `template_with_design_time_prompt` | Calculation Manager template + DTP | After Save |
 | 20 | `aso_allocation_mdx_params` | `AllocationParameters`, `mdxParams` | Jobs |
 | 21 | `substitution_variables_and_rtp_driver` | sub vars, one-line expression style | Jobs |
+| 22 | `import_csv_limited_columns_watchable` | header-driven column list (varying/limited columns), per-row progress + `sleep` throttle | Jobs |
 
 ## Accuracy notes
 
