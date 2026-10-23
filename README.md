@@ -65,6 +65,7 @@ snippets/epm-groovy.code-snippets
 | 20 | `aso_allocation_mdx_params` | `AllocationParameters`, `mdxParams` | Jobs |
 | 21 | `substitution_variables_and_rtp_driver` | sub vars, one-line expression style | Jobs |
 | 22 | `import_csv_limited_columns_watchable` | header-driven column list (varying/limited columns), per-row progress + `sleep` throttle | Jobs |
+| 23 | `data_management_import_with_dimension_mapping` | file import via Data Management Import Format (multi-dim column mapping configured in UI), REST trigger + poll, no grid built in Groovy | Jobs |
 
 ## Accuracy notes
 
