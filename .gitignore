@@ -1,0 +1,5 @@
+# nothing runs locally; keep scratch exports out of the repo
+*.zip
+*.xlsx
+*.log
+.DS_Store

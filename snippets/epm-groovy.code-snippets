@@ -1,0 +1,144 @@
+{
+  "EPM rule skeleton": {
+    "prefix": "epmrule",
+    "scope": "groovy",
+    "body": [
+      "/*RTPS: ${1}*/",
+      "// Cube     : ${2:Plan1}",
+      "// Form     : ${3:FormName}",
+      "// Trigger  : ${4|After Load,Before Save,After Save,Right-click menu,Jobs page|}",
+      "// Purpose  : ${5}",
+      "",
+      "if(!operation.hasGrid()) return",
+      "",
+      "${0}",
+      "return"
+    ],
+    "description": "Oracle EPM Groovy rule header + grid guard"
+  },
+  "Capture edited members": {
+    "prefix": "epmedited",
+    "scope": "groovy",
+    "body": [
+      "Set<String> editedMembers = []",
+      "operation.grid.dataCellIterator({ DataCell cell -> cell.edited }, MemberNameType.ESSBASE_NAME).each { DataCell cell ->",
+      "    editedMembers << cell.periodName << cell.getMemberName(\"${1:Product}\")",
+      "}",
+      "if(!editedMembers) { println \"No edited cells found!\"; return }"
+    ],
+    "description": "Collect edited periods + members from the form grid"
+  },
+  "Focused calc script": {
+    "prefix": "epmcalc",
+    "scope": "groovy",
+    "body": [
+      "String calcScript = \"\"\"",
+      "FIX(\\${cscParams(operation.grid.pov, editedMembers)})",
+      "  \"${1:Calc Member}\"",
+      "  (",
+      "     \"${2:Target}\" = \"${3:A}\" * \"${4:B}\";",
+      "  )",
+      "ENDFIX;\"\"\"",
+      "println(\"Calc script executed by \\$operation.user.fullName:\\n\\$calcScript\")",
+      "return calcScript.toString()"
+    ],
+    "description": "Return a focused Essbase calc script"
+  },
+  "Read grid (definition builder)": {
+    "prefix": "epmread",
+    "scope": "groovy",
+    "body": [
+      "Cube cube = operation.application.getCube(\"${1:Plan1}\")",
+      "DataGridDefinitionBuilder b = cube.dataGridDefinitionBuilder()",
+      "b.setPov(['${2:Scenario}','${3:Years}'], [['${4:Plan}'],['${5:FY26}']])",
+      "b.addColumn(['${6:Period}'], [['${7:YearTotal}']])",
+      "b.addRow(['${8:Entity}'], [['ILvl0Descendants(\"${9:Total Entity}\")']])",
+      "cube.loadGrid(b.build(), false).withCloseable { DataGrid grid ->",
+      "    grid.dataCellIterator().each { DataCell cell ->",
+      "        ${0}",
+      "    }",
+      "}"
+    ],
+    "description": "Query a cube slice with DataGridDefinitionBuilder + loadGrid"
+  },
+  "Write grid (grid builder)": {
+    "prefix": "epmwrite",
+    "scope": "groovy",
+    "body": [
+      "Cube cube = operation.application.getCube(\"${1:Plan1}\")",
+      "DataGridBuilder b = cube.getDataGridBuilder(\"MM/DD/YYYY\"${2:, ExecuteAsUser.SYSTEM_USER})",
+      "b.addPov(${3:'FY26', 'Plan', 'Working', 'USD'})",
+      "b.addColumn(${4:'Jan', 'Feb', 'Mar'})",
+      "b.addRow([${5:'Entity1', 'Account1'}], [${6:100, 200, '#missing'}])",
+      "DataGridBuilder.Status st = new DataGridBuilder.Status()",
+      "b.build(st).withCloseable { DataGrid grid ->",
+      "    println \"accepted=\\$st.numAcceptedCells rejected=\\$st.numRejectedCells \\$st.cellsRejected\"",
+      "    cube.saveGrid(grid)",
+      "}"
+    ],
+    "description": "Write cells with DataGridBuilder + saveGrid"
+  },
+  "Smart Push edited rows": {
+    "prefix": "epmpush",
+    "scope": "groovy",
+    "body": [
+      "if(!operation.grid.hasSmartPush(\"${1:Push Name}\")) return",
+      "Set<String> members = []",
+      "operation.grid.dataCellIterator(${2:'Salary'}).each { DataCell cell -> if(cell.edited) members << cell.getMemberName(\"${3:Employee}\") }",
+      "if(!members) return",
+      "operation.grid.getSmartPush(\"$1\").execute([\"$3\": '\"' + members.join('\", \"') + '\"'])"
+    ],
+    "description": "Run a form Smart Push scoped to edited members"
+  },
+  "REST call with polling": {
+    "prefix": "epmrest",
+    "scope": "groovy",
+    "body": [
+      "HttpResponse<String> resp = operation.application.getConnection(\"${1:DM}\")",
+      "        .post()",
+      "        .body(json([${2:\"jobType\":\"DATARULE\", \"jobName\":\"Rule\"}]))",
+      "        .asString()",
+      "if(!(200..299).contains(resp.status)) throwVetoException(\"Error: \\$resp.statusText\")",
+      "ReadContext ctx = JsonPath.parse(resp.body)",
+      "int status = ctx.read('\\$.status')",
+      "String jobId = ctx.read('\\$.jobId') as String",
+      "for(long d = 50; status == -1; d = Math.min(1000, d * 2)) {",
+      "    sleep(d)",
+      "    status = JsonPath.parse(operation.application.getConnection(\"$1\").get(\"/\" + jobId).asString().body).read('\\$.status')",
+      "}",
+      "println \"job \\$jobId finished with status \\$status\""
+    ],
+    "description": "POST a job via a named Connection and poll with back-off"
+  },
+  "Validate RTP + veto": {
+    "prefix": "epmvalidate",
+    "scope": "groovy",
+    "body": [
+      "def mbUs = messageBundle([\"${1:validation.key}\": \"${2:Message with {0}}\"])",
+      "def mbl  = messageBundleLoader([\"en\": mbUs])",
+      "validateRtp(rtps.${3:Prompt}, ${4:/^.+$/}, mbl, \"$1\", rtps.$3.enteredValue)"
+    ],
+    "description": "Localized RTP validation"
+  },
+  "Execute job (call rule)": {
+    "prefix": "epmjob",
+    "scope": "groovy",
+    "body": [
+      "JobFactory jf = operation.application.jobFactory",
+      "Job job = executeJob(jf.job(\"${1:Rule Name}\", \"${2|Rules,Ruleset,Template,Cube Refresh,Clear Cube|}\", [${3:\"rtpName\": cscParams(operation.grid.pov)}]))",
+      "println \"job status: \\$job.status\""
+    ],
+    "description": "Run another rule/ruleset/refresh synchronously"
+  },
+  "CSV to outbox": {
+    "prefix": "epmcsv",
+    "scope": "groovy",
+    "body": [
+      "csvWriter('${1:out.csv}').withCloseable { CsvWriter out ->",
+      "    out.writeNext(${2:'col1', 'col2'})",
+      "    ${0}",
+      "}"
+    ],
+    "description": "Write a CSV file to the outbox"
+  }
+}

@@ -1,0 +1,6 @@
+{
+  "files.associations": { "*.groovy": "groovy" },
+  "github.copilot.chat.codeGeneration.useInstructionFiles": true,
+  "chat.promptFiles": true,
+  "editor.rulers": [120]
+}
