@@ -157,3 +157,11 @@ The `Close Date` account in the sample must be a date account. Rejected rows are
 the configured outbox error file. These `DataImportRequest` methods and enum constants are
 marked ⚠ in `docs/01-api-reference.md`; confirm their live signatures/constants in Oracle's
 Javadoc before deploying.
+
+## P19. Submit an EDMCS node import into a view
+EDMCS is a separate product and runtime from Calculation Manager Groovy. From an EPM Groovy
+rule, use a named Connection to call the EDMCS REST API; upload the import file to EDMCS
+before submitting the request. `examples/27` demonstrates request submission only: a
+successful HTTP response does not mean the asynchronous import has completed. Inspect its
+response and the EDMCS request history, and confirm the endpoint and body fields against the
+live EDMCS REST API reference before deploying.
