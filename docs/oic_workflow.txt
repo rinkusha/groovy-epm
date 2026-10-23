@@ -1,0 +1,106 @@
+ORACLE INTEGRATION CLOUD (OIC) WORKFLOW GUIDE
+==============================================
+
+Purpose
+-------
+Use OIC to orchestrate data or process integrations with Oracle Fusion Cloud
+EPM. OIC handles connectivity, orchestration, mapping, scheduling, and
+monitoring. EPM Groovy rules run inside Calculation Manager and handle
+EPM-side logic; they are not standalone OIC scripts.
+
+Choose an integration pattern
+-----------------------------
+1. File-based data load
+   Source system -> OIC -> EPM inbox -> EPM data load or business rule.
+   Use this for batch data, large files, or loads managed by Data Integration
+   or Data Management.
+
+2. REST orchestration
+   OIC -> EPM REST API -> job status and result handling.
+   Use this to launch an EPM job or rule, or to coordinate a process that
+   does not need OIC to transform a data file.
+
+3. Event- or schedule-driven process
+   Source event or OIC schedule -> source extraction -> mapping/validation ->
+   one of the EPM patterns above.
+   Use the trigger that fits the source system and required latency.
+
+Implementation workflow
+-----------------------
+1. Define the contract before building the integration.
+   Record the source and target, trigger and schedule, data grain, file or
+   request format, EPM application and cube, target period/scenario, expected
+   volume, duplicate handling, and success/failure criteria. Treat all sample
+   names and URLs as environment-specific placeholders.
+
+2. Configure connections and security.
+   Create OIC connections for the source and EPM using supported adapters or
+   REST connections. Use a dedicated service identity with only the required
+   permissions. Store credentials in the connection security configuration,
+   never in mappings, payloads, logs, or Groovy source. Use the tenant's
+   supported authentication method and protect any secrets outside the
+   integration design.
+
+3. Build the source extraction and mapping.
+   Query or receive only the needed records. Map source identifiers to EPM
+   member names and normalize periods, dates, numbers, decimal separators,
+   nulls, and time zones. Validate required fields and reject or route invalid
+   records with enough context to correct them without logging sensitive data.
+
+4. For a file-based load:
+   a. Create the agreed file format, including header, encoding, delimiter,
+      quoting, and line-ending rules.
+   b. Write the file using the OIC stage-file capabilities when staging is
+      needed. Use deterministic names or a run identifier to avoid accidental
+      overwrites and duplicate processing.
+   c. Upload the file to the correct EPM inbox location using the configured
+      EPM adapter or supported EPM REST API.
+   d. Start the configured EPM data-load process or business rule. For a
+      Groovy rule that reads an inbox file, confirm the expected file name,
+      column layout, POV values, and permissions match the rule.
+   e. Capture the EPM job identifier and wait for a terminal status before
+      reporting success. Do not treat a successful upload or job submission
+      as proof that the data load succeeded.
+
+5. For a REST-orchestrated process:
+   a. Call the documented EPM REST endpoint for the intended operation,
+      application, and job.
+   b. Check the HTTP status and response body. Save the returned job
+      identifier when the operation is asynchronous.
+   c. Poll the documented status endpoint at a bounded interval until the
+      job reaches a terminal state or a configured timeout is reached.
+   d. Treat job failure, timeout, malformed responses, and authentication
+      errors as failures; include the EPM job identifier in operational
+      diagnostics.
+   Use the current Oracle REST API documentation for exact endpoint paths,
+   request fields, status values, and authentication requirements. These
+   differ by EPM service and API version.
+
+6. Make retries safe.
+   Decide which failures are retryable. Before retrying, determine whether the
+   upload or EPM job may already have completed. Use a stable run identifier,
+   duplicate checks, or an appropriate replace/merge strategy so that retries
+   do not silently double-load data. Avoid unbounded polling and automatic
+   retries of non-idempotent actions.
+
+7. Handle completion and errors.
+   On success, record the source run identifier, EPM job identifier, file
+   name (if applicable), record counts, and completion time. On failure,
+   capture the failing stage, sanitized response details, and available EPM
+   process details. Route failures to the agreed alert or recovery process;
+   do not report success when any required EPM job failed.
+
+8. Test and operate the integration.
+   Test valid, empty, malformed, duplicate, and large inputs; expired
+   credentials; EPM validation errors; job failures; and timeout/retry
+   behavior. Confirm results in both OIC monitoring and the EPM job/process
+   details. Document ownership, alert routing, rerun steps, retention, and
+   reconciliation.
+
+Reference example in this repository
+------------------------------------
+salew/README.md and salew/01_load_salesforce_csv_grouped.groovy demonstrate
+one concrete flow: OIC queries Salesforce, writes a CSV, uploads it to the
+EPM inbox, and starts a Planning Groovy rule that groups and loads the rows.
+That example's Salesforce fields, EPM names, file name, and job configuration
+are placeholders, not universal settings.

@@ -12,7 +12,7 @@ Built from Oracle's *Groovy Scripting Reference* javadoc (E96254-40, Jan 2026), 
 | `.github/instructions/epm-groovy.instructions.md` | Copilot, for any `*.groovy` file (path-scoped rules) |
 | `.github/prompts/new-epm-rule.prompt.md` | Copilot Chat: type `/new-epm-rule` (VS Code prompt files) |
 | `AGENTS.md` | Copilot coding agent, Claude Code, Cursor and others |
-| `docs/` + `examples/` | Everything the agent reads when it needs the API |
+| `docs/` + `examples/` | API reference, patterns, gotchas, and examples, including the OIC workflow guide at `docs/oic_workflow.txt` |
 | `snippets/epm-groovy.code-snippets` | VS Code snippets (`epmrule`, `epmedited`, `epmread`, `epmwrite`, `epmrest`, …) |
 
 **Setup:** clone (or copy these folders into your own rules repo), open in VS Code with Copilot enabled, make sure *Use instruction files* is on in Copilot settings, then ask e.g.
@@ -34,6 +34,7 @@ docs/
   02-patterns-cookbook.md        <- 15 reusable patterns
   03-gotchas.md                  <- error table + sandbox limits
   04-links.md                    <- every Oracle URL used
+  oic_workflow.txt               <- general OIC-to-EPM integration workflow
 examples/                        <- complete rules, one pattern each
 snippets/epm-groovy.code-snippets
 .vscode/extensions.json          <- recommends a Groovy language extension
